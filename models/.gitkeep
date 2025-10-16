@@ -1,0 +1,5 @@
+# Models directory
+# Place pretrained model files here:
+# - GFPGANv1.4.pth
+# - RealESRGAN_x4plus.pth
+# - adaface_ir101_webface12m.ckpt
