@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import LoginPage from '@/components/LoginPage'
+import RegisterPage from '@/components/RegisterPage'
 import IdentificationModule from '@/components/IdentificationModule'
 import RegistrationModule from '@/components/RegistrationModule'
 import StudentsModule from '@/components/StudentsModule'
@@ -10,6 +11,7 @@ import StatsModule from '@/components/StatsModule'
 export default function Home() {
   const [activeTab, setActiveTab] = useState('identify')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
   const [username, setUsername] = useState('')
 
   useEffect(() => {
@@ -25,6 +27,13 @@ export default function Home() {
   const handleLoginSuccess = () => {
     setIsAuthenticated(true)
     setUsername(localStorage.getItem('username') || 'User')
+    setShowRegister(false)
+  }
+
+  const handleRegisterSuccess = () => {
+    setIsAuthenticated(true)
+    setUsername(localStorage.getItem('username') || 'User')
+    setShowRegister(false)
   }
 
   const handleLogout = () => {
@@ -32,10 +41,24 @@ export default function Home() {
     localStorage.removeItem('username')
     setIsAuthenticated(false)
     setUsername('')
+    setShowRegister(false)
   }
 
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />
+    if (showRegister) {
+      return (
+        <RegisterPage 
+          onRegisterSuccess={handleRegisterSuccess}
+          onBackToLogin={() => setShowRegister(false)}
+        />
+      )
+    }
+    return (
+      <LoginPage 
+        onLoginSuccess={handleLoginSuccess}
+        onShowRegister={() => setShowRegister(true)}
+      />
+    )
   }
 
   return (

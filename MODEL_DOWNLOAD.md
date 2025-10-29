@@ -9,21 +9,25 @@ Due to GitHub's 100MB file size limit, the following model weights are **NOT inc
 ## 📥 Download Links
 
 ### 1. AdaFace IR-101 (~250 MB)
+
 **Purpose**: Face embedding extraction (512-dimensional vectors)
 
 **Download Options:**
+
 - **Official Release**: https://github.com/mk-minchul/AdaFace/releases
 - **Google Drive**: https://drive.google.com/file/d/1BURBHRAwF_hZiJNW_xdqLHvyAH6N5Jbx/view
 - **Hugging Face**: https://huggingface.co/minchul/AdaFace
 
 **File Name**: `adaface_ir101_webface12m.ckpt`
 
-**Destination**: 
+**Destination**:
+
 ```
 Student-identification-system/models/adaface_ir101_webface12m.ckpt
 ```
 
 **SHA256 Checksum** (for verification):
+
 ```
 a5b56b9c71f45d3eed2db0e6c9a4c9a5b8c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4
 ```
@@ -31,15 +35,18 @@ a5b56b9c71f45d3eed2db0e6c9a4c9a5b8c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4
 ---
 
 ### 2. GFPGAN v1.4 (~350 MB)
+
 **Purpose**: Face restoration and enhancement
 
 **Download Options:**
+
 - **Official Release**: https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth
 - **Google Drive**: https://drive.google.com/file/d/1Q3bKFPf6cJGf8kXW_fU2JYQs_9F8xGm-/view
 
 **File Name**: `GFPGANv1.4.pth`
 
-**Destination**: 
+**Destination**:
+
 ```
 Student-identification-system/models/GFPGANv1.4.pth
 ```
@@ -47,15 +54,18 @@ Student-identification-system/models/GFPGANv1.4.pth
 ---
 
 ### 3. Real-ESRGAN x4plus (~65 MB)
+
 **Purpose**: Super-resolution (2× upscaling)
 
 **Download Options:**
+
 - **Official Release**: https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
 - **Google Drive**: https://drive.google.com/file/d/1x2F5mxZK_8Q7Y9Z8W7V6U5T4S3R2Q1P0/view
 
 **File Name**: `RealESRGAN_x4plus.pth`
 
-**Destination**: 
+**Destination**:
+
 ```
 Student-identification-system/models/RealESRGAN_x4plus.pth
 ```
@@ -65,25 +75,29 @@ Student-identification-system/models/RealESRGAN_x4plus.pth
 ### 4. GFPGAN Additional Weights
 
 #### 4a. Detection Model (~110 MB)
+
 **Purpose**: Face component detection for GFPGAN
 
 **Download**: https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/detection_Resnet50_Final.pth
 
 **File Name**: `detection_Resnet50_Final.pth`
 
-**Destination**: 
+**Destination**:
+
 ```
 Student-identification-system/gfpgan/weights/detection_Resnet50_Final.pth
 ```
 
 #### 4b. Parsing Model (~85 MB)
+
 **Purpose**: Face parsing for GFPGAN
 
 **Download**: https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/parsing_parsenet.pth
 
 **File Name**: `parsing_parsenet.pth`
 
-**Destination**: 
+**Destination**:
+
 ```
 Student-identification-system/gfpgan/weights/parsing_parsenet.pth
 ```
@@ -153,21 +167,21 @@ MODELS = {
 def download_file(url, path, name):
     """Download file with progress bar."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    
+
     if os.path.exists(path):
         print(f"✓ {name} already exists at {path}")
         return True
-    
+
     print(f"\n📥 Downloading {name}...")
     print(f"   URL: {url}")
     print(f"   Destination: {path}")
-    
+
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-        
+
         total_size = int(response.headers.get('content-length', 0))
-        
+
         with open(path, 'wb') as f, tqdm(
             desc=name,
             total=total_size,
@@ -178,10 +192,10 @@ def download_file(url, path, name):
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
                 pbar.update(len(chunk))
-        
+
         print(f"✅ Successfully downloaded {name}")
         return True
-        
+
     except Exception as e:
         print(f"❌ Error downloading {name}: {e}")
         if os.path.exists(path):
@@ -192,7 +206,7 @@ def verify_models():
     """Check if all models are present."""
     print("\n🔍 Verifying models...")
     all_present = True
-    
+
     for name, info in MODELS.items():
         if os.path.exists(info["path"]):
             size_mb = os.path.getsize(info["path"]) / (1024 * 1024)
@@ -200,33 +214,33 @@ def verify_models():
         else:
             print(f"❌ {name}: Missing")
             all_present = False
-    
+
     return all_present
 
 if __name__ == "__main__":
     print("=" * 60)
     print("🎓 Student Identification System - Model Downloader")
     print("=" * 60)
-    
+
     total_size = sum(m["size_mb"] for m in MODELS.values())
     print(f"\nTotal download size: ~{total_size} MB")
     print(f"Number of models: {len(MODELS)}")
-    
+
     response = input("\nProceed with download? (y/n): ")
     if response.lower() != 'y':
         print("Download cancelled.")
         exit(0)
-    
+
     # Download all models
     success_count = 0
     for name, info in MODELS.items():
         if download_file(info["url"], info["path"], name):
             success_count += 1
-    
+
     print("\n" + "=" * 60)
     print(f"Download Summary: {success_count}/{len(MODELS)} successful")
     print("=" * 60)
-    
+
     # Verify
     if verify_models():
         print("\n✅ All models are ready!")
@@ -246,18 +260,21 @@ if __name__ == "__main__":
 After downloading, verify the files:
 
 ### Windows PowerShell:
+
 ```powershell
 Get-ChildItem models/*.* | Select-Object Name, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}}
 Get-ChildItem gfpgan/weights/*.* | Select-Object Name, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}}
 ```
 
 ### Linux/Mac:
+
 ```bash
 ls -lh models/
 ls -lh gfpgan/weights/
 ```
 
 ### Python Verification:
+
 ```python
 import os
 
@@ -282,21 +299,25 @@ for model in models:
 ## ❓ Troubleshooting
 
 ### Download Fails
+
 - Check internet connection
 - Try alternative download links (Google Drive)
 - Use download managers (IDM, wget, curl)
 
 ### Files Corrupted
+
 - Re-download the file
 - Verify checksum (SHA256)
 - Check disk space (need ~2 GB free)
 
 ### Can't Access GitHub Releases
+
 - Use Google Drive mirrors
 - Use VPN if region-blocked
 - Download from Hugging Face
 
 ### Slow Download Speed
+
 ```bash
 # Use wget with multiple connections
 wget -c --tries=0 --read-timeout=20 [URL] -O [filename]
@@ -330,6 +351,7 @@ print(sha256_checksum("models/adaface_ir101_webface12m.ckpt"))
 ## 📞 Need Help?
 
 If you encounter issues downloading models:
+
 1. Check [GitHub Issues](https://github.com/dheerajreddy71/Student-identification-system/issues)
 2. Create new issue with "model-download" tag
 3. Contact: dheerajreddy71@example.com

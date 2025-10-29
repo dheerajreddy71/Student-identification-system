@@ -8,9 +8,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface LoginPageProps {
   onLoginSuccess: () => void
+  onShowRegister?: () => void
 }
 
-export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+export default function LoginPage({ onLoginSuccess, onShowRegister }: LoginPageProps) {
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('admin123')
   const [loading, setLoading] = useState(false)
@@ -169,6 +170,28 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               Please change the password after first login
             </p>
           </div>
+
+          {/* Register Link */}
+          {onShowRegister && (
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={onShowRegister}
+                className="text-gray-300 hover:text-white transition-colors duration-200 
+                         flex items-center justify-center gap-2 mx-auto group"
+              >
+                <span>Don't have an account?</span>
+                <span className="text-blue-400 group-hover:text-blue-300 font-semibold 
+                               group-hover:translate-x-1 transition-transform duration-200 
+                               flex items-center gap-1">
+                  Create Account
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

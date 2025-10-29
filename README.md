@@ -14,12 +14,14 @@
 ## 🌟 Features
 
 ### 🔍 **Smart Recognition**
+
 - **Quality-Adaptive Pipeline**: Automatically enhances poor-quality images
 - **Multi-Photo Registration**: Averages embeddings from multiple photos for robustness
 - **Real-Time Processing**: 2-4 seconds per identification on CPU
 - **High Accuracy**: 86.8% overall accuracy, 93.2% on high-quality images
 
 ### 🛠️ **Technical Highlights**
+
 - **AdaFace IR-101**: 512-D embeddings with quality-adaptive margins
 - **GFPGAN**: Face restoration for degraded images
 - **Real-ESRGAN**: 2× super-resolution for low-resolution faces
@@ -27,6 +29,7 @@
 - **FAISS**: Fast similarity search (30ms for 1,000+ students)
 
 ### 📊 **Complete Management**
+
 - Student registration with multi-photo support
 - Real-time identification with confidence scores
 - Detailed analytics and reporting
@@ -38,6 +41,7 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 Python 3.9+
 Node.js 18+
@@ -48,6 +52,7 @@ Git with Git LFS
 ### Installation
 
 1. **Clone Repository**
+
 ```bash
 git clone https://github.com/dheerajreddy71/Student-identification-system.git
 cd Student-identification-system
@@ -57,13 +62,14 @@ cd Student-identification-system
 
 ⚠️ **IMPORTANT**: Due to GitHub file size limits, model weights must be downloaded separately.
 
-| Model | Size | Download Link | Destination |
-|-------|------|---------------|-------------|
-| AdaFace IR-101 | 250MB | [Download](https://github.com/mk-minchul/AdaFace/releases) | `models/adaface_ir101_webface12m.ckpt` |
-| GFPGAN v1.4 | 350MB | [Download](https://github.com/TencentARC/GFPGAN/releases) | `models/GFPGANv1.4.pth` |
-| Real-ESRGAN | 65MB | [Download](https://github.com/xinntao/Real-ESRGAN/releases) | `models/RealESRGAN_x4plus.pth` |
+| Model          | Size  | Download Link                                               | Destination                            |
+| -------------- | ----- | ----------------------------------------------------------- | -------------------------------------- |
+| AdaFace IR-101 | 250MB | [Download](https://github.com/mk-minchul/AdaFace/releases)  | `models/adaface_ir101_webface12m.ckpt` |
+| GFPGAN v1.4    | 350MB | [Download](https://github.com/TencentARC/GFPGAN/releases)   | `models/GFPGANv1.4.pth`                |
+| Real-ESRGAN    | 65MB  | [Download](https://github.com/xinntao/Real-ESRGAN/releases) | `models/RealESRGAN_x4plus.pth`         |
 
 3. **Backend Setup**
+
 ```bash
 # Create virtual environment
 python -m venv venv
@@ -82,6 +88,7 @@ python backend/init_db.py
 ```
 
 4. **Frontend Setup**
+
 ```bash
 cd frontend
 npm install
@@ -89,6 +96,7 @@ cd ..
 ```
 
 5. **Create Admin User**
+
 ```bash
 python scripts/create_admin.py
 ```
@@ -96,11 +104,13 @@ python scripts/create_admin.py
 6. **Run Application**
 
 **Terminal 1 - Backend:**
+
 ```bash
 uvicorn backend.main:app --reload --port 8000
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd frontend
 npm run dev
@@ -145,6 +155,7 @@ Student-identification-system/
 ### 1. Register Students
 
 Place photos in this structure:
+
 ```
 trainset/
 ├── CSE/
@@ -158,6 +169,7 @@ trainset/
 ```
 
 Run registration:
+
 ```bash
 python scripts/register_students.py
 ```
@@ -180,6 +192,7 @@ python scripts/register_students.py
 ## 🔬 Technical Architecture
 
 ### Pipeline Flow
+
 ```
 Input Image
     ↓
@@ -199,6 +212,7 @@ Q < 0.7? → Yes → [GFPGAN + Real-ESRGAN Enhancement]
 ```
 
 ### Quality Metrics
+
 - **Sharpness**: Laplacian variance (weight: 0.3)
 - **Brightness**: Mean pixel intensity (weight: 0.2)
 - **Contrast**: Std deviation (weight: 0.2)
@@ -206,32 +220,34 @@ Q < 0.7? → Yes → [GFPGAN + Real-ESRGAN Enhancement]
 - **Confidence**: MTCNN score (weight: 0.15)
 
 ### Models Used
-| Model | Purpose | Parameters | Input/Output |
-|-------|---------|------------|--------------|
-| MTCNN | Face Detection | 3 cascaded CNNs | Image → BBox + Landmarks |
-| Real-ESRGAN | Super-Resolution | 23 RRDB blocks | 112×112 → 224×224 |
-| GFPGAN | Face Restoration | U-Net + StyleGAN2 | Degraded → Clean |
-| AdaFace IR-101 | Embedding | 42M params | 112×112 → 512-D |
-| FAISS | Similarity Search | IndexFlatIP | 512-D → Top-K matches |
+
+| Model          | Purpose           | Parameters        | Input/Output             |
+| -------------- | ----------------- | ----------------- | ------------------------ |
+| MTCNN          | Face Detection    | 3 cascaded CNNs   | Image → BBox + Landmarks |
+| Real-ESRGAN    | Super-Resolution  | 23 RRDB blocks    | 112×112 → 224×224        |
+| GFPGAN         | Face Restoration  | U-Net + StyleGAN2 | Degraded → Clean         |
+| AdaFace IR-101 | Embedding         | 42M params        | 112×112 → 512-D          |
+| FAISS          | Similarity Search | IndexFlatIP       | 512-D → Top-K matches    |
 
 ---
 
 ## 📊 Performance
 
-| Metric | Value |
-|--------|-------|
-| **Overall Accuracy** | 86.8% |
-| **High-Quality Images** | 93.2% |
-| **Low-Quality Images** | 58.5% → 78.2% (with enhancement) |
-| **Processing Time** | 2.4s avg (CPU) |
-| **FAISS Search** | 30ms (1,014 students) |
-| **Dataset Size** | 1,014 students, 12 departments |
+| Metric                  | Value                            |
+| ----------------------- | -------------------------------- |
+| **Overall Accuracy**    | 86.8%                            |
+| **High-Quality Images** | 93.2%                            |
+| **Low-Quality Images**  | 58.5% → 78.2% (with enhancement) |
+| **Processing Time**     | 2.4s avg (CPU)                   |
+| **FAISS Search**        | 30ms (1,014 students)            |
+| **Dataset Size**        | 1,014 students, 12 departments   |
 
 ### Ablation Study
-| Configuration | Accuracy |
-|---------------|----------|
-| Always Enhance | 87.2% (2.7s avg) |
-| Never Enhance | 79.3% (0.9s avg) |
+
+| Configuration        | Accuracy                |
+| -------------------- | ----------------------- |
+| Always Enhance       | 87.2% (2.7s avg)        |
+| Never Enhance        | 79.3% (0.9s avg)        |
 | **Adaptive (Q<0.7)** | **86.8% (1.8s avg)** ✅ |
 
 ---
@@ -239,6 +255,7 @@ Q < 0.7? → Yes → [GFPGAN + Real-ESRGAN Enhancement]
 ## 🔧 Configuration
 
 ### Environment Variables (`.env`)
+
 ```env
 DATABASE_URL=sqlite:///./students.db
 SECRET_KEY=your-secret-key-here
@@ -251,6 +268,7 @@ ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 ### Frontend (`.env.local`)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
@@ -260,12 +278,14 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ## 🚢 Deployment
 
 See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for detailed instructions on:
+
 - Cloud deployment (Render, Railway, AWS)
 - Production configuration
 - Security best practices
 - Scaling strategies
 
 **Quick Deploy Options:**
+
 - [![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com)
 - [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app)
 
@@ -276,11 +296,13 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for detailed instructions on:
 ## 🛠️ Development
 
 ### Run Tests
+
 ```bash
 pytest tests/
 ```
 
 ### Code Quality
+
 ```bash
 # Format
 black backend/ scripts/
@@ -290,6 +312,7 @@ pylint backend/ scripts/
 ```
 
 ### API Documentation
+
 Access interactive API docs at: `http://localhost:8000/docs`
 
 ---
@@ -297,6 +320,7 @@ Access interactive API docs at: `http://localhost:8000/docs`
 ## 🤝 Contributing
 
 Contributions welcome! Please:
+
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit changes (`git commit -m 'Add AmazingFeature'`)
@@ -333,6 +357,7 @@ Contributions welcome! Please:
 This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 
 **Model Licenses:**
+
 - AdaFace: MIT License
 - GFPGAN: Apache 2.0
 - Real-ESRGAN: BSD 3-Clause
