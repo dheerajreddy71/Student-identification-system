@@ -271,14 +271,7 @@ See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for detailed instructions on:
 
 ---
 
-## 📚 Documentation
 
-- **[VIVA_PRESENTATION_NOTES.md](VIVA_PRESENTATION_NOTES.md)**: Complete technical walkthrough
-- **[PROJECT_DIARY_ENTRIES.md](PROJECT_DIARY_ENTRIES.md)**: Development log
-- **[IEEE_RESEARCH_PAPER.md](IEEE_RESEARCH_PAPER.md)**: Academic paper
-- **[PROJECT_PRESENTATION.md](PROJECT_PRESENTATION.md)**: Presentation slides
-
----
 
 ## 🛠️ Development
 
@@ -365,7 +358,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 
 ## 📞 Support
 
-- 📧 Email: dheerajreddy71@example.com
+- 📧 Email: byreddydherajreddy@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/dheerajreddy71/Student-identification-system/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/dheerajreddy71/Student-identification-system/discussions)
 
