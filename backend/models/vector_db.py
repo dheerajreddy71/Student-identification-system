@@ -13,7 +13,7 @@ from pathlib import Path
 class FAISSVectorDB:
     """FAISS-based vector database for face embeddings"""
     
-    def __init__(self, embedding_dim: int = 128, 
+    def __init__(self, embedding_dim: int = 512, 
                  index_path: Optional[str] = None,
                  metadata_path: Optional[str] = None,
                  metric: str = 'cosine'):
@@ -21,7 +21,7 @@ class FAISSVectorDB:
         Initialize FAISS index
         
         Args:
-            embedding_dim: Dimension of embeddings (128 for SimpleFaceRecognizer)
+            embedding_dim: Dimension of embeddings
             index_path: Path to save/load FAISS index
             metadata_path: Path to save/load metadata
             metric: 'cosine' or 'l2'
@@ -58,7 +58,7 @@ class FAISSVectorDB:
         Add embedding to index
         
         Args:
-            embedding: Embedding vector (128-D)
+            embedding: Embedding vector (512-D)
             student_id: Unique student identifier
             metadata: Additional metadata to store
             
@@ -287,9 +287,14 @@ class FAISSVectorDB:
         if not index_path or not metadata_path:
             raise ValueError("Must provide paths to save index and metadata")
         
-        # Create directories if needed
-        os.makedirs(os.path.dirname(index_path), exist_ok=True)
-        os.makedirs(os.path.dirname(metadata_path), exist_ok=True)
+        # Create directories if needed (handle cases where path has no directory)
+        dir_index = os.path.dirname(index_path)
+        if dir_index:
+            os.makedirs(dir_index, exist_ok=True)
+        
+        dir_meta = os.path.dirname(metadata_path)
+        if dir_meta:
+            os.makedirs(dir_meta, exist_ok=True)
         
         # Save FAISS index
         faiss.write_index(self.index, index_path)

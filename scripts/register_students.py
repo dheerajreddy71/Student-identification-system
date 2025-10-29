@@ -1,257 +1,211 @@
-﻿"""
-Register all students from trainset directory
+﻿#!/usr/bin/env python3
 """
-import sys
+Rebuild FAISS index with department structure
+trainset/DEPT/STUDENT_ID/photos.jpg
+Structure: AGRI/ag1/ag1_1.jpg, CSE/cse1/cse1_1.jpg, etc.
+"""
 import os
 import cv2
-import json
+import numpy as np
+import random
 from pathlib import Path
-from tqdm import tqdm
-import argparse
-
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from backend.config import settings, SessionLocal
-from backend.database.operations import StudentDB
-from backend.services.preprocessing_pipeline import create_pipeline
+from backend.models.adaface_model import AdaFaceModel
+from backend.models.face_detection import FaceDetector
 from backend.models.vector_db import FAISSVectorDB
+from backend.config import settings, get_db
+from backend.database.operations import StudentDB
+from backend.database.models import Student
 
+# Random name generator
+FIRST_NAMES = [
+    "Aarav", "Vivaan", "Aditya", "Arjun", "Sai", "Vihaan", "Krishna", "Ayaan",
+    "Ananya", "Diya", "Aadhya", "Avni", "Sara", "Pari", "Isha", "Mira",
+    "Rohan", "Karan", "Rudra", "Reyansh", "Aarush", "Dhruv", "Pranav", "Dev",
+    "Priya", "Riya", "Pooja", "Sneha", "Kavya", "Nisha", "Simran", "Tanvi",
+    "Rahul", "Amit", "Raj", "Vikram", "Nikhil", "Sanjay", "Suresh", "Anil",
+    "Divya", "Meera", "Lakshmi", "Radha", "Sita", "Gita", "Kamala", "Uma"
+]
 
-def parse_student_id(folder_name):
-    """Parse student ID from folder name (e.g., '0001' from '0001')"""
-    return folder_name
+LAST_NAMES = [
+    "Sharma", "Verma", "Gupta", "Kumar", "Singh", "Patel", "Reddy", "Nair",
+    "Iyer", "Menon", "Pillai", "Rao", "Joshi", "Desai", "Mehta", "Shah",
+    "Agarwal", "Bansal", "Chopra", "Kapoor", "Malhotra", "Khanna", "Bhatia",
+    "Sethi", "Arora", "Jindal", "Goel", "Mittal", "Singhal", "Garg"
+]
 
+def generate_student_name():
+    """Generate random Indian student name"""
+    return f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}"
 
-def get_best_image(student_folder):
-    """
-    Select the best image from student folder (searches recursively)
-    Priority: *_script.jpg > largest file > first image
-    """
-    # Search recursively for images
-    images = list(student_folder.rglob("*.jpg")) + list(student_folder.rglob("*.png"))
-    
-    if not images:
-        return None
-    
-    # Check for script image (ID card photo)
-    script_images = [img for img in images if 'script' in img.name.lower()]
-    if script_images:
-        return script_images[0]
-    
-    # Return largest image (usually better quality)
-    return max(images, key=lambda p: p.stat().st_size)
+def generate_email(student_id, dept):
+    """Generate email from student ID"""
+    return f"{student_id}@{dept.lower()}.university.edu"
 
+def generate_phone():
+    """Generate random Indian phone number"""
+    return f"+91-{random.randint(70000,99999)}{random.randint(10000,99999)}"
 
-def extract_student_info(student_id, image_path):
-    """
-    Extract student information
-    In production, this would query from actual student database
-    """
-    # Default information (customize based on your data source)
-    departments = [
-        "Computer Science", "Electrical Engineering", "Mechanical Engineering",
-        "Civil Engineering", "Information Technology", "Electronics Engineering"
-    ]
-    
-    dept_idx = int(student_id) % len(departments)
-    
-    return {
-        "student_id": student_id,
-        "name": f"Student {student_id}",  # Replace with actual name
-        "department": departments[dept_idx],
-        "year": (int(student_id) % 4) + 1,
-        "roll_number": f"ROLL-{student_id}",
-        "email": f"student{student_id}@university.edu",
-        "phone": f"+1-555-{student_id}",
-        "address": f"{student_id} University Ave"
-    }
+print("="*70)
+print("Rebuilding with Department Structure")
+print("="*70)
 
-
-def register_students_from_trainset(trainset_path, batch_size=10, skip_existing=True):
-    """
-    Register all students from trainset directory
-    
-    Args:
-        trainset_path: Path to trainset directory
-        batch_size: Number of students to process in parallel
-        skip_existing: Skip students already registered
-    """
-    trainset_path = Path(trainset_path)
-    
-    if not trainset_path.exists():
-        print(f"Error: Trainset directory not found: {trainset_path}")
-        return
-    
-    print("=" * 70)
-    print("Student Registration from Trainset")
-    print("=" * 70)
-    print()
-    
-    # Initialize pipelines
-    print("Initializing preprocessing pipeline...")
-    preprocessing, _ = create_pipeline(device=settings.device)
-    
-    # Initialize vector database
-    print("Initializing FAISS vector database...")
-    vector_db = FAISSVectorDB(
-        embedding_dim=settings.embedding_dimension,
-        index_path=settings.faiss_index_path,
-        metadata_path=settings.faiss_metadata_path,
-        metric='cosine'
-    )
-    
-    # Get database session
-    db = SessionLocal()
-    
-    # Find all student folders
-    student_folders = sorted([f for f in trainset_path.iterdir() if f.is_dir()])
-    print(f"Found {len(student_folders)} student folders\n")
-    
-    # Statistics
-    stats = {
-        'total': len(student_folders),
-        'registered': 0,
-        'skipped': 0,
-        'failed': 0,
-        'no_face': 0,
-        'no_image': 0
-    }
-    
-    # Process each student
-    print("Processing students...")
-    print()
-    
-    for student_folder in tqdm(student_folders, desc="Registering students"):
-        student_id = parse_student_id(student_folder.name)
-        
-        try:
-            # Check if already registered
-            if skip_existing:
-                existing = StudentDB.get_student_by_id(db, student_id)
-                if existing:
-                    stats['skipped'] += 1
-                    continue
-            
-            # Get best image
-            image_path = get_best_image(student_folder)
-            
-            if image_path is None:
-                tqdm.write(f"WARNING: No images found for student {student_id}")
-                stats['no_image'] += 1
-                continue
-            
-            # Load image
-            image = cv2.imread(str(image_path))
-            if image is None:
-                tqdm.write(f"WARNING: Could not load image for student {student_id}")
-                stats['failed'] += 1
-                continue
-            
-            # Process image
-            embedding, preprocessed_face, metrics = preprocessing.process_for_registration(
-                str(image_path)
-            )
-            
-            if embedding is None:
-                tqdm.write(f"WARNING: No face detected for student {student_id}")
-                stats['no_face'] += 1
-                continue
-            
-            # Get student info
-            student_info = extract_student_info(student_id, image_path)
-            
-            # Add to FAISS
-            faiss_idx = vector_db.add_embedding(
-                embedding,
-                student_id,
-                metadata={
-                    "name": student_info["name"],
-                    "department": student_info["department"],
-                    "image_path": str(image_path)
-                }
-            )
-            
-            # Add to database
-            student_data = {
-                **student_info,
-                "faiss_index": faiss_idx,
-                "photo_path": str(image_path)
-            }
-            
-            student = StudentDB.create_student(db, student_data)
-            stats['registered'] += 1
-            
-            # Save periodically
-            if stats['registered'] % 10 == 0:
-                vector_db.save()
-                db.commit()
-        
-        except Exception as e:
-            import traceback
-            error_msg = f"{str(e)}\n{traceback.format_exc()}"
-            tqdm.write(f"ERROR processing student {student_id}: {error_msg}")
-            stats['failed'] += 1
-            continue
-    
-    # Final save
-    print("\nSaving database...")
-    vector_db.save()
+# Clear database
+print("\n1. Clearing database...")
+db = next(get_db())
+try:
+    deleted = db.query(Student).delete()
     db.commit()
-    db.close()
-    
-    # Print statistics
-    print()
-    print("=" * 70)
-    print("Registration Complete!")
-    print("=" * 70)
-    print(f"Total students:        {stats['total']}")
-    print(f"Successfully registered: {stats['registered']}")
-    print(f"Skipped (existing):    {stats['skipped']}")
-    print(f"Failed (error):        {stats['failed']}")
-    print(f"No face detected:      {stats['no_face']}")
-    print(f"No images found:       {stats['no_image']}")
-    print("=" * 70)
-    print()
-    print(f"FAISS index saved to: {settings.faiss_index_path}")
-    print(f"Metadata saved to: {settings.faiss_metadata_path}")
-    
-    # Save registration report
-    report_path = "data/registration_report.json"
-    with open(report_path, 'w') as f:
-        json.dump(stats, f, indent=2)
-    print(f"Registration report saved to: {report_path}")
+    print(f"Deleted {deleted} students")
+except Exception as e:
+    print(f"Error: {e}")
+    db.rollback()
 
+# Load models
+print("\n2. Loading AdaFace...")
+adaface = AdaFaceModel(model_path=settings.adaface_model_path, device='cpu')
+print("OK")
 
-def main():
-    parser = argparse.ArgumentParser(description="Register students from trainset")
-    parser.add_argument(
-        "--data_dir",
-        type=str,
-        default="trainset",
-        help="Path to trainset directory"
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=10,
-        help="Batch size for processing"
-    )
-    parser.add_argument(
-        "--skip_existing",
-        action="store_true",
-        default=True,
-        help="Skip already registered students"
-    )
+print("\n3. Loading Face Detector...")
+detector = FaceDetector(device='cpu')
+print("OK")
+
+print("\n4. Creating FAISS index...")
+vector_db = FAISSVectorDB(embedding_dim=512, metric='cosine')
+print("OK")
+
+# Process trainset
+print("\n5. Processing trainset...")
+trainset = Path("./trainset")
+
+processed = 0
+failed = 0
+students_data = []
+
+for dept_folder in sorted(trainset.iterdir()):
+    if not dept_folder.is_dir():
+        continue
     
-    args = parser.parse_args()
+    dept = dept_folder.name
+    print(f"\n{dept}:")
     
-    register_students_from_trainset(
-        trainset_path=args.data_dir,
-        batch_size=args.batch_size,
-        skip_existing=args.skip_existing
-    )
+    for student_folder in sorted(dept_folder.iterdir()):
+        if not student_folder.is_dir():
+            continue
+        
+        student_id = student_folder.name
+        images = list(student_folder.glob("*.jpg")) + list(student_folder.glob("*.png"))
+        
+        if not images:
+            print(f"  {student_id} ... No images")
+            failed += 1
+            continue
+        
+        # Process each image for this student
+        embeddings = []
+        for img_path in images:
+            try:
+                # Load image
+                img = cv2.imread(str(img_path))
+                if img is None:
+                    print(f"    - {img_path.name}: Failed to load")
+                    continue
+                
+                # Detect face in the image (returns single dict or None)
+                face = detector.detect_faces(img)
+                if not face or 'box' not in face:
+                    print(f"    - {img_path.name}: No face detected")
+                    continue
+                
+                # Extract face coordinates
+                x, y, w, h = face['box']
+                
+                # Extract face region
+                face_img = img[y:y+h, x:x+w]
+                
+                # Resize to 112x112 for AdaFace
+                face_resized = cv2.resize(face_img, (112, 112))
+                
+                # Extract embedding
+                emb = adaface.extract_embedding(face_resized)
+                
+                # Validate embedding
+                if emb is not None and emb.shape[0] == 512:
+                    embeddings.append(emb)
+                    print(f"    - {img_path.name}: OK (embedding extracted)")
+                else:
+                    print(f"    - {img_path.name}: Invalid embedding")
+                    
+            except Exception as e:
+                print(f"    - {img_path.name}: Error - {str(e)}")
+                continue
+        
+        # Check if we got any valid embeddings
+        if not embeddings:
+            print(f"  {student_id} ... FAILED (no valid embeddings from {len(images)} images)")
+            failed += 1
+            continue
+        
+        # Average embeddings from multiple images for robust representation
+        final_emb = np.mean(embeddings, axis=0) if len(embeddings) > 1 else embeddings[0]
+        
+        # Normalize embedding (important for cosine similarity)
+        final_emb = final_emb / np.linalg.norm(final_emb)
+        
+        # Generate student details
+        student_name = generate_student_name()
+        year = random.randint(1, 4)  # Random year between 1-4
+        
+        idx = vector_db.add_embedding(
+            final_emb,
+            student_id,
+            metadata={
+                "name": student_name,
+                "department": dept,
+                "year": year,
+                "roll_number": student_id
+            }
+        )
+        
+        students_data.append({
+            "student_id": student_id,
+            "name": student_name,
+            "department": dept,
+            "year": year,
+            "roll_number": student_id,
+            "faiss_index": idx,
+            "photo_path": str(student_folder.relative_to(Path("."))),
+            "email": generate_email(student_id, dept),
+            "phone": generate_phone(),
+            "address": f"Hostel Block-{random.choice(['A','B','C','D'])}, Room {random.randint(101,599)}"
+        })
+        
+        print(f"  {student_id} ({student_name}) ... SUCCESS ({len(embeddings)}/{len(images)} images, FAISS idx: {idx})")
+        processed += 1
 
+print(f"\n{'='*70}")
+print(f"Processed: {processed} | Failed: {failed}")
+print(f"{'='*70}")
 
-if __name__ == "__main__":
-    main()
+# Save FAISS
+print("\n6. Saving FAISS...")
+vector_db.save("./data/faiss_index.bin", "./data/faiss_metadata.json")
+print("OK")
+
+# Insert into DB
+print("\n7. Inserting into database...")
+inserted = 0
+for data in students_data:
+    try:
+        StudentDB.create_student(db, data)
+        inserted += 1
+    except Exception as e:
+        print(f"Error: {data['student_id']} - {e}")
+
+db.commit()
+print(f"Inserted {inserted} students")
+
+print(f"\n{'='*70}")
+print("COMPLETE!")
+print(f"FAISS: {vector_db.index.ntotal} vectors")
+print(f"Database: {inserted} students")
+print(f"{'='*70}")

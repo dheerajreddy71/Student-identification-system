@@ -164,9 +164,15 @@ class AdaFaceModel:
         # Convert to numpy
         embedding = embedding.cpu().numpy().flatten()
         
+        # Check embedding quality - detect garbage embeddings from poor quality faces
+        norm = np.linalg.norm(embedding)
+        if norm < 1e-3:
+            print(f"⚠️  Embedding norm too small ({norm:.6f}) - likely poor quality input")
+            return None
+        
         # Normalize
         if normalize:
-            embedding = embedding / (np.linalg.norm(embedding) + 1e-8)
+            embedding = embedding / (norm + 1e-8)
         
         return embedding
     

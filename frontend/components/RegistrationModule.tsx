@@ -134,13 +134,16 @@ export default function RegistrationModule() {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-4">Register New Student</h2>
+    <div className="glass-card rounded-2xl p-8 border border-white/20 float-animation">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="text-4xl">➕</div>
+        <h2 className="text-3xl font-bold text-gradient">Register New Student</h2>
+      </div>
 
-      <form onSubmit={registerStudent} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={registerStudent} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Student ID *
             </label>
             <input
@@ -149,12 +152,16 @@ export default function RegistrationModule() {
               value={formData.student_id}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white placeholder-gray-400 focus:outline-none 
+                        focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                        transition-all duration-300"
+              placeholder="e.g., STU2024001"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Full Name *
             </label>
             <input
@@ -163,12 +170,16 @@ export default function RegistrationModule() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white placeholder-gray-400 focus:outline-none 
+                        focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                        transition-all duration-300"
+              placeholder="Enter full name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Department *
             </label>
             <input
@@ -177,12 +188,16 @@ export default function RegistrationModule() {
               value={formData.department}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white placeholder-gray-400 focus:outline-none 
+                        focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                        transition-all duration-300"
+              placeholder="e.g., CSE, ECE"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Year *
             </label>
             <select
@@ -190,16 +205,19 @@ export default function RegistrationModule() {
               value={formData.year}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white focus:outline-none focus:border-blue-400/50 
+                        focus:ring-2 focus:ring-blue-400/20 transition-all duration-300 
+                        bg-slate-800/50 cursor-pointer"
             >
               {[1, 2, 3, 4].map(year => (
-                <option key={year} value={year}>Year {year}</option>
+                <option key={year} value={year} className="bg-slate-800">Year {year}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Roll Number *
             </label>
             <input
@@ -208,12 +226,16 @@ export default function RegistrationModule() {
               value={formData.roll_number}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white placeholder-gray-400 focus:outline-none 
+                        focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                        transition-all duration-300"
+              placeholder="e.g., 21BCS001"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Email
             </label>
             <input
@@ -221,12 +243,16 @@ export default function RegistrationModule() {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white placeholder-gray-400 focus:outline-none 
+                        focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                        transition-all duration-300"
+              placeholder="student@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Phone
             </label>
             <input
@@ -234,13 +260,17 @@ export default function RegistrationModule() {
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                        text-white placeholder-gray-400 focus:outline-none 
+                        focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                        transition-all duration-300"
+              placeholder="+91 XXXXXXXXXX"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
             Address
           </label>
           <textarea
@@ -248,44 +278,59 @@ export default function RegistrationModule() {
             value={formData.address}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                      text-white placeholder-gray-400 focus:outline-none 
+                      focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                      transition-all duration-300 resize-none"
+            placeholder="Enter complete address"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+            <span className="text-xl">📸</span>
             Photos (Multiple photos for better accuracy) *
           </label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handlePhotoSelect}
-            required
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded file:border-0
-              file:text-sm file:font-semibold
-              file:bg-primary-50 file:text-primary-700
-              hover:file:bg-primary-100"
-          />
+          <div className="glass-card rounded-xl p-4 border border-white/10">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoSelect}
+              required
+              className="block w-full text-sm text-gray-300
+                file:mr-4 file:py-2.5 file:px-5
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-gradient-to-r file:from-purple-500 file:to-pink-500 file:text-white
+                hover:file:shadow-lg hover:file:shadow-purple-500/50
+                file:transition-all file:duration-300 file:cursor-pointer"
+            />
+          </div>
           {previews.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">
+            <div className="mt-5">
+              <p className="text-sm text-gray-300 mb-3 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                 Selected {previews.length} photo{previews.length > 1 ? 's' : ''}
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {previews.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-32 object-cover rounded border"
-                    />
+                  <div key={index} className="relative group">
+                    <div className="glass-card-strong rounded-xl overflow-hidden border border-white/20 p-2 
+                                  transition-all duration-300 hover:scale-105 hover:border-purple-400/50">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => removePhoto(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                      className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-600 
+                                text-white rounded-full w-8 h-8 flex items-center justify-center 
+                                shadow-lg hover:shadow-red-500/50 transition-all duration-300 
+                                hover:scale-110 opacity-0 group-hover:opacity-100"
                     >
                       ×
                     </button>
@@ -299,21 +344,35 @@ export default function RegistrationModule() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-3 rounded font-semibold text-white
+          className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300
             ${loading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-primary-600 hover:bg-primary-700'
+              ? 'glass-card text-gray-500 cursor-not-allowed'
+              : 'glow-button bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg hover:shadow-purple-500/50 hover:scale-105'
             }`}
         >
-          {loading ? '⏳ Registering...' : '➕ Register Student'}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Registering...
+            </span>
+          ) : (
+            '➕ Register Student'
+          )}
         </button>
       </form>
 
       {/* Result */}
       {result && (
-        <div className={`mt-6 p-4 rounded ${result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-          <p className={`font-semibold ${result.success ? 'text-green-800' : 'text-red-800'}`}>
-            {result.success ? '✓ ' : '✗ '}{result.message}
+        <div className={`mt-6 glass-card-strong rounded-xl p-5 border-l-4 transform transition-all duration-500 ${
+          result.success 
+            ? 'border-green-400 bg-green-500/10' 
+            : 'border-red-400 bg-red-500/10'
+        }`}>
+          <p className={`font-bold flex items-center gap-3 ${
+            result.success ? 'text-green-300' : 'text-red-300'
+          }`}>
+            <span className="text-2xl">{result.success ? '✓' : '✗'}</span>
+            {result.message}
           </p>
         </div>
       )}

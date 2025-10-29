@@ -34,22 +34,30 @@ wheels/
 *.swo
 *~
 
-# Models
-models/*.pth
-models/*.ckpt
-models/*.pkl
+# Models (tracked with Git LFS)
+# models/*.pth
+# models/*.ckpt
+# models/*.pkl
 !models/.gitkeep
+
+# GFPGAN weights (too large - must download separately)
+gfpgan/weights/*.pth
+!gfpgan/weights/.gitkeep
 
 # Data
 data/faiss_index.bin
-data/*.json
-data/*.pkl
+data/faiss_metadata.json
 *.db
 *.sqlite
 
 # Training data (too large for GitHub)
 trainset/
 photos/
+test_dataset/
+trainset_backup/
+
+# Backup folder (documentation duplicates)
+backup/
 
 # Logs
 logs/
@@ -79,3 +87,10 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+
+# Test results
+test_results/
+
+# GFPGAN weights (tracked with Git LFS)
+# gfpgan/weights/*.pth
+

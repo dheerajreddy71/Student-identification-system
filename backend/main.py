@@ -24,6 +24,7 @@ from backend.utils.auth import (
     get_password_hash,
     decode_access_token
 )
+from backend.utils.photo_validator import PhotoValidator
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Create database tables
@@ -185,6 +186,37 @@ async def register_student(
     if not photos or len(photos) == 0:
         raise HTTPException(status_code=400, detail="At least one photo is required")
     
+    # Initialize photo validator
+    photo_validator = PhotoValidator(device=settings.device)
+    
+    # Validate first photo quality before processing
+    first_photo_bytes = photos[0].file.read()
+    photos[0].file.seek(0)
+    
+    # Save to temp file for validation
+    import tempfile
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+        tmp.write(first_photo_bytes)
+        tmp_path = tmp.name
+    
+    try:
+        is_valid, message, details = photo_validator.validate_photo(tmp_path)
+        
+        if not is_valid:
+            # Return validation failure with recommendations
+            recommendations = photo_validator.get_recommendations(details)
+            raise HTTPException(
+                status_code=400, 
+                detail=f"{message}\n\nRecommendations:\n{recommendations}"
+            )
+        
+        print(f"✅ Photo validation passed: {message}")
+        
+    finally:
+        # Clean up temp file
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+    
     # Get pipelines
     preprocessing, recognition = get_pipelines()
     
@@ -336,6 +368,32 @@ async def identify_student(
     except Exception as e:
         print(f"Error getting student details: {e}")
     
+    # Calculate total processing time
+    end_time = datetime.utcnow()
+    total_time = (end_time - start_time).total_seconds()
+    
+    # Log the identification attempt
+    try:
+        metrics = result.get('metrics', {})
+        best_match = result.get('best_match') or {}
+        
+        log_data = {
+            'student_id': best_match.get('student_id') if isinstance(best_match, dict) else None,
+            'success': result.get('success', False),
+            'similarity_score': best_match.get('similarity') if isinstance(best_match, dict) else None,
+            'threshold_used': 0.45,  # Default threshold
+            'preprocessing_time': metrics.get('preprocessing_time', 0.0),
+            'embedding_time': metrics.get('embedding_time', 0.0),
+            'search_time': metrics.get('search_time', 0.0),
+            'total_time': total_time,
+            'face_detected': metrics.get('face_detected', False),
+            'face_confidence': metrics.get('face_confidence', 0.0),
+            'image_quality_score': metrics.get('image_quality', 0.0)
+        }
+        IdentificationLogDB.create_log(db, log_data)
+    except Exception as e:
+        print(f"Error creating identification log: {e}")
+    
     # Create safe response with guaranteed valid values
     try:
         best_match = result.get('best_match') or {}
@@ -364,16 +422,38 @@ async def identify_student(
         )
 
 
-@app.get("/api/students", response_model=List[schemas.StudentResponse])
+@app.get("/api/students", response_model=schemas.PaginatedStudentsResponse)
 def list_students(
-    skip: int = 0,
-    limit: int = 10000,  # Increased to fetch all students by default
+    page: int = 1,
+    limit: int = 50,
+    search: str = None,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """List all students"""
-    students = StudentDB.get_all_students(db, skip=skip, limit=limit)
-    return [schemas.StudentResponse.model_validate(s) for s in students]
+    """List all students with pagination and search"""
+    # Calculate skip
+    skip = (page - 1) * limit
+    
+    # Get students with search if provided
+    if search:
+        students = StudentDB.search_students(db, search)
+        total = len(students)
+        # Apply pagination to search results
+        students = students[skip:skip + limit]
+    else:
+        total = StudentDB.count_students(db)
+        students = StudentDB.get_all_students(db, skip=skip, limit=limit)
+    
+    # Calculate pagination info
+    total_pages = (total + limit - 1) // limit  # Ceiling division
+    
+    return schemas.PaginatedStudentsResponse(
+        students=[schemas.StudentResponse.model_validate(s) for s in students],
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
 
 
 @app.get("/api/students/{student_id}", response_model=schemas.StudentResponse)
@@ -426,6 +506,8 @@ def delete_student(
 @app.get("/api/stats", response_model=schemas.SystemStats)
 def get_system_stats(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Get system statistics"""
+    from backend.database.models import IdentificationLog
+    
     total_students = StudentDB.count_students(db)
     success_rate = IdentificationLogDB.get_success_rate(db, hours=24)
     avg_latency = IdentificationLogDB.get_average_latency(db, hours=24)
@@ -435,7 +517,7 @@ def get_system_stats(db: Session = Depends(get_db), current_user = Depends(get_c
     
     return schemas.SystemStats(
         total_students=total_students,
-        total_identifications=db.query(IdentificationLogDB).count(),
+        total_identifications=db.query(IdentificationLog).count(),
         success_rate=success_rate,
         average_latency=avg_latency,
         database_size=db_stats['total_vectors']
@@ -451,6 +533,37 @@ def get_identification_logs(
     """Get recent identification logs"""
     logs = IdentificationLogDB.get_recent_logs(db, limit=limit)
     return [schemas.IdentificationLogResponse.model_validate(log) for log in logs]
+
+
+@app.delete("/api/logs/{log_id}")
+def delete_identification_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete a specific identification log"""
+    from backend.database.models import IdentificationLog
+    
+    log = db.query(IdentificationLog).filter(IdentificationLog.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+    
+    db.delete(log)
+    db.commit()
+    return {"message": "Log deleted successfully"}
+
+
+@app.delete("/api/logs")
+def delete_all_logs(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Delete all identification logs"""
+    from backend.database.models import IdentificationLog
+    
+    count = db.query(IdentificationLog).delete()
+    db.commit()
+    return {"message": f"Deleted {count} log(s) successfully"}
 
 
 # ============= Utility Functions =============

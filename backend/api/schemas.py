@@ -46,6 +46,15 @@ class StudentResponse(StudentBase):
         from_attributes = True
 
 
+class PaginatedStudentsResponse(BaseModel):
+    """Schema for paginated students response"""
+    students: List[StudentResponse]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
 class IdentificationResult(BaseModel):
     """Schema for identification result"""
     success: bool

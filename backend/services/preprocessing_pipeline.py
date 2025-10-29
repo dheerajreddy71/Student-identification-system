@@ -13,6 +13,7 @@ from backend.models.face_restoration import FaceRestorer, SuperResolutionEnhance
 from backend.models.adaface_model import AdaFaceModel
 from backend.models.vector_db import FAISSVectorDB
 from backend.config import settings
+from backend.utils.failure_reason import classify_failure
 
 
 class PreprocessingPipeline:
@@ -343,7 +344,7 @@ class RecognitionPipeline:
                         enhance: bool = True,
                         top_k: int = 5) -> Dict:
         """
-        Identify student from image
+        Identify student from image with detailed failure classification
         
         Args:
             image: Input image (BGR format)
@@ -351,18 +352,44 @@ class RecognitionPipeline:
             top_k: Number of top matches to return
             
         Returns:
-            Recognition result dictionary
+            Recognition result dictionary with failure details
         """
         start_time = time.time()
+        
+        # Track failure information
+        face_detected = False
+        face_info = None
+        embedding = None
+        best_similarity = None
         
         # Extract embedding
         embedding, metrics = self.preprocessing.extract_embedding(image, enhance)
         
+        # Check if face was detected
+        face_detected = metrics.get('face_detected', False)
+        
+        # Get face info if available (need to re-detect to get box info for classification)
+        if face_detected:
+            # Detect face to get detailed info
+            aligned_face, face_info = self.preprocessing.face_detector.detect_and_align(image)
+        
         if embedding is None:
+            # Classify failure reason
+            failure_info = classify_failure(
+                face_detected=face_detected,
+                face_info=face_info,
+                embedding=None,
+                similarity=None,
+                threshold=self.threshold
+            )
+            
             return {
                 'success': False,
-                'error': 'No face detected',
-                'metrics': metrics
+                'error': failure_info['reason'],
+                'failure_advice': failure_info['advice'],
+                'failure_status': failure_info['status'],
+                'metrics': metrics,
+                'total_time': time.time() - start_time
             }
         
         # Search in FAISS
@@ -374,11 +401,34 @@ class RecognitionPipeline:
         )
         metrics['search_time'] = time.time() - search_start
         
-        # Prepare result
+        # Get best similarity if available
+        if matches:
+            best_similarity = matches[0]['similarity']
+        
+        # If no matches but face was detected and embedding generated
+        if not matches:
+            failure_info = classify_failure(
+                face_detected=True,
+                face_info=face_info,
+                embedding=embedding,
+                similarity=0.0,  # Below threshold
+                threshold=self.threshold
+            )
+            
+            return {
+                'success': False,
+                'error': failure_info['reason'],
+                'failure_advice': failure_info['advice'],
+                'failure_status': failure_info['status'],
+                'metrics': metrics,
+                'total_time': time.time() - start_time
+            }
+        
+        # Success case
         result = {
-            'success': len(matches) > 0,
+            'success': True,
             'matches': matches,
-            'best_match': matches[0] if matches else None,
+            'best_match': matches[0],
             'metrics': metrics,
             'total_time': time.time() - start_time
         }
@@ -442,7 +492,7 @@ def create_pipeline(device: str = 'cpu') -> Tuple[PreprocessingPipeline, Recogni
     
     # Initialize vector database
     vector_db = FAISSVectorDB(
-        embedding_dim=128,  # Simple recognizer uses 128-dim embeddings
+        embedding_dim=512,  # AdaFace uses 512-dim embeddings
         index_path=settings.faiss_index_path,
         metadata_path=settings.faiss_metadata_path,
         metric='cosine'

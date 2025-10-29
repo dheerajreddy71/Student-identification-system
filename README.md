@@ -1,303 +1,377 @@
-# AI-Powered Student Identification System
+# 🎓 Student Identification System
 
-## 🎯 Overview
+**Quality-Adaptive Face Recognition System for Educational Institutions**
 
-A **complete, production-ready** capstone project that identifies students from ANY quality image (CCTV, mobile photos, low-light, side-angle, blurred images) using only **ONE clear ID card photo** per student.
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688.svg)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.3-black.svg)](https://nextjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### Core Technology Stack
+> A state-of-the-art face recognition system that adapts to image quality, achieving 86.8% accuracy on real-world student datasets.
 
-- **GFPGAN v1.4** - Face restoration and denoising
-- **Real-ESRGAN** - Super-resolution for low-quality images
-- **MTCNN** - Robust face detection and alignment
-- **AdaFace (IR-101)** - Quality-adaptive face embeddings (512-D)
-- **FAISS** - Efficient vector similarity search
-- **FastAPI** - Production-grade REST API
-- **Next.js + React** - Modern web dashboard
+---
 
-### Key Features ✨
+## 🌟 Features
 
-- ✅ Works with poor quality images (blur, low-light, side-angle, low-res)
-- ✅ Real-time identification: <4s CPU, <0.5s GPU
-- ✅ High accuracy: >97% with single reference photo
-- ✅ Complete REST API with JWT authentication
-- ✅ Modern web dashboard with webcam support
-- ✅ Secure: encryption, password hashing, RBAC
-- ✅ Scalable: handles 10,000+ students efficiently
-- ✅ Production-ready: Docker, logging, monitoring
+### 🔍 **Smart Recognition**
+- **Quality-Adaptive Pipeline**: Automatically enhances poor-quality images
+- **Multi-Photo Registration**: Averages embeddings from multiple photos for robustness
+- **Real-Time Processing**: 2-4 seconds per identification on CPU
+- **High Accuracy**: 86.8% overall accuracy, 93.2% on high-quality images
 
-## 🚀 Quick Start (10 Minutes)
+### 🛠️ **Technical Highlights**
+- **AdaFace IR-101**: 512-D embeddings with quality-adaptive margins
+- **GFPGAN**: Face restoration for degraded images
+- **Real-ESRGAN**: 2× super-resolution for low-resolution faces
+- **MTCNN**: Multi-task cascaded face detection
+- **FAISS**: Fast similarity search (30ms for 1,000+ students)
 
-### Automated Setup (Recommended)
+### 📊 **Complete Management**
+- Student registration with multi-photo support
+- Real-time identification with confidence scores
+- Detailed analytics and reporting
+- Department-wise organization
+- Audit logging and metrics tracking
 
-```powershell
-# Run the automated setup script
-.\setup.ps1
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+```bash
+Python 3.9+
+Node.js 18+
+Git with Git LFS
+8GB+ RAM
 ```
 
-This will:
+### Installation
 
-1. Create virtual environment
-2. Install all dependencies
-3. Download pretrained models (~662 MB)
-4. Initialize database
-5. Register students from trainset
+1. **Clone Repository**
+```bash
+git clone https://github.com/dheerajreddy71/Student-identification-system.git
+cd Student-identification-system
+```
 
-### Manual Setup
+2. **Download Model Weights**
 
-```powershell
-# 1. Install dependencies
+⚠️ **IMPORTANT**: Due to GitHub file size limits, model weights must be downloaded separately.
+
+| Model | Size | Download Link | Destination |
+|-------|------|---------------|-------------|
+| AdaFace IR-101 | 250MB | [Download](https://github.com/mk-minchul/AdaFace/releases) | `models/adaface_ir101_webface12m.ckpt` |
+| GFPGAN v1.4 | 350MB | [Download](https://github.com/TencentARC/GFPGAN/releases) | `models/GFPGANv1.4.pth` |
+| Real-ESRGAN | 65MB | [Download](https://github.com/xinntao/Real-ESRGAN/releases) | `models/RealESRGAN_x4plus.pth` |
+
+3. **Backend Setup**
+```bash
+# Create virtual environment
 python -m venv venv
-.\venv\Scripts\activate
+
+# Activate (Windows)
+venv\Scripts\activate
+
+# Activate (Linux/Mac)
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-# 2. Download models
-python scripts/download_models.py
-
-# 3. Initialize database
+# Initialize database
 python backend/init_db.py
-
-# 4. Register students
-python scripts/register_students.py --data_dir trainset
-
-# 5. Start backend
-cd backend
-uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-## 📚 Documentation
-
-- **[QUICKSTART.md](QUICKSTART.md)** - Get started in 10 minutes
-- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Detailed setup and troubleshooting
-- **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - Complete technical overview
-- **API Docs** - http://localhost:8000/docs (after starting backend)
-
-## 🏗️ System Architecture
-
-```
-Input Image (any quality)
-    ↓
-[MTCNN] Face Detection & Alignment
-    ↓
-[Real-ESRGAN] Super-Resolution (if needed)
-    ↓
-[GFPGAN v1.4] Face Restoration
-    ↓
-[AdaFace IR-101] Embedding Extraction (512-D)
-    ↓
-[FAISS] Cosine Similarity Search
-    ↓
-Student Match + Confidence Score
-```
-
-## 📋 System Requirements
-
-- **Python**: 3.8 or higher
-- **RAM**: 8GB minimum (16GB recommended)
-- **Storage**: 2GB for models and data
-- **GPU**: Optional (CUDA-compatible for 10x speedup)
-- **OS**: Windows, Linux, or macOS
-
-## 🎮 Usage
-
-### Testing Identification
-
-```powershell
-# Test on single image
-python scripts/test_identification.py "trainset/0001/0001_0000255/0000001.jpg"
-
-# Test on multiple images
-python scripts/test_identification.py "trainset/0001/0001_0000255" --batch
-```
-
-### Using the API
-
-```python
-import requests
-
-# Login
-auth = requests.post("http://localhost:8000/api/auth/login",
-                     json={"username": "admin", "password": "admin123"})
-token = auth.json()["access_token"]
-
-# Identify student
-files = {"photo": open("test_image.jpg", "rb")}
-response = requests.post(
-    "http://localhost:8000/api/students/identify",
-    files=files,
-    data={"enhance": "true"},
-    headers={"Authorization": f"Bearer {token}"}
-)
-
-result = response.json()
-print(f"Student: {result['student']['name']}")
-print(f"Confidence: {result['similarity']:.2%}")
-```
-
-### Web Dashboard
-
-```powershell
-# Install frontend dependencies
+4. **Frontend Setup**
+```bash
 cd frontend
 npm install
+cd ..
+```
 
-# Start development server
+5. **Create Admin User**
+```bash
+python scripts/create_admin.py
+```
+
+6. **Run Application**
+
+**Terminal 1 - Backend:**
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
 npm run dev
 ```
 
-Access at: http://localhost:3000
+Access at: **http://localhost:3000**
 
-### Docker Deployment
-
-```powershell
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-## 📡 API Endpoints
-
-| Method | Endpoint                 | Description                 |
-| ------ | ------------------------ | --------------------------- |
-| POST   | `/api/auth/login`        | User authentication         |
-| POST   | `/api/auth/register`     | Register new user           |
-| POST   | `/api/students/register` | Register new student        |
-| POST   | `/api/students/identify` | Identify student from photo |
-| GET    | `/api/students`          | List all students           |
-| GET    | `/api/students/{id}`     | Get student details         |
-| PUT    | `/api/students/{id}`     | Update student info         |
-| DELETE | `/api/students/{id}`     | Remove student              |
-| GET    | `/api/stats`             | System statistics           |
-| GET    | `/api/logs`              | Identification logs         |
-| GET    | `/health`                | Health check                |
-
-**Full API Documentation**: http://localhost:8000/docs
-
-## 📊 Performance Metrics
-
-| Metric              | Value                    |
-| ------------------- | ------------------------ |
-| **CPU Processing**  | 3.5s per image           |
-| **GPU Processing**  | 0.4s per image           |
-| **Target Accuracy** | >97%                     |
-| **Scalability**     | 10,000+ students         |
-| **Database Size**   | ~100MB for 10K students  |
-| **Embeddings**      | 512-D normalized vectors |
-
-### Processing Breakdown
-
-- Face Detection: ~0.3s
-- Restoration (GFPGAN): ~1.5s
-- Embedding (AdaFace): ~0.5s
-- FAISS Search: ~0.01s
+---
 
 ## 📁 Project Structure
 
 ```
-Student Identification System/
-├── backend/
-│   ├── api/              # FastAPI endpoints
-│   ├── models/           # ML model wrappers
-│   ├── database/         # Database operations
-│   ├── services/         # Business logic
-│   └── utils/            # Helper functions
-├── frontend/             # React/Next.js dashboard
-├── scripts/              # Utility scripts
-├── models/               # Pretrained model weights
-├── data/                 # FAISS index and metadata
-├── trainset/             # Training images
-└── tests/                # Unit tests
+Student-identification-system/
+├── backend/                    # FastAPI backend
+│   ├── api/                   # API endpoints
+│   ├── models/                # ML models & database models
+│   ├── services/              # Business logic
+│   ├── utils/                 # Utilities
+│   └── main.py               # Entry point
+├── frontend/                  # Next.js frontend
+│   ├── app/                   # Pages
+│   ├── components/            # React components
+│   └── lib/                   # Utilities
+├── models/                    # Model weights (download separately)
+│   ├── adaface_ir101_webface12m.ckpt
+│   ├── GFPGANv1.4.pth
+│   └── RealESRGAN_x4plus.pth
+├── gfpgan/weights/           # GFPGAN additional weights
+├── scripts/                   # Utility scripts
+│   ├── register_students.py  # Bulk registration
+│   └── create_admin.py       # Admin creation
+├── trainset/                  # Student photos (not in repo)
+├── data/                      # FAISS index & metadata
+├── requirements.txt           # Python dependencies
+└── README.md                 # This file
 ```
-
-## 🔐 Security Features
-
-- ✅ JWT-based authentication with expiration
-- ✅ Password hashing (bcrypt)
-- ✅ Embedding encryption at rest
-- ✅ Role-based access control
-- ✅ CORS configuration
-- ✅ Rate limiting ready
-- ✅ Audit logging
-
-**⚠️ Production Security Checklist**:
-
-1. Change default admin password
-2. Update SECRET_KEY and ENCRYPTION_KEY in .env
-3. Enable HTTPS
-4. Configure firewall rules
-5. Regular database backups
-
-## 🎓 Use Cases
-
-- **Campus Security** - Identify students from CCTV
-- **Attendance System** - Automatic attendance marking
-- **Access Control** - Secure building/lab entry
-- **Library System** - Quick student verification
-- **Exam Monitoring** - Prevent impersonation
-- **Cafeteria** - Face-based payment
-
-## 🐛 Troubleshooting
-
-### "No face detected"
-
-- Ensure image contains visible face
-- Try with `enhance=true` parameter
-- Check image is not corrupted
-
-### "Low similarity score"
-
-- Adjust threshold in .env (default: 0.45)
-- Re-register with better quality photo
-- Ensure single face in reference image
-
-### "Slow processing"
-
-- Use GPU: Set `DEVICE=cuda` in .env
-- Disable Real-ESRGAN if not needed
-- Process in batches
-
-See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed troubleshooting.
-
-## 📞 Support
-
-- 📖 **Documentation**: See SETUP_GUIDE.md and PROJECT_SUMMARY.md
-- 🐛 **Issues**: Check logs in `logs/system.log`
-- 💬 **API Help**: http://localhost:8000/docs
-- 📧 **Contact**: Your institution's IT support
-
-## 🏆 Project Status
-
-**Status**: ✅ COMPLETE & PRODUCTION-READY
-
-This is a fully functional, end-to-end student identification system ready for deployment in educational institutions.
-
-**Features Implemented**:
-
-- ✅ Complete preprocessing pipeline
-- ✅ Face restoration and enhancement
-- ✅ Robust face recognition
-- ✅ Vector database with FAISS
-- ✅ REST API with authentication
-- ✅ Web dashboard
-- ✅ Docker deployment
-- ✅ Comprehensive documentation
-
-## 📄 License
-
-Educational/Research Use
-
-## 🙏 Acknowledgments
-
-- **GFPGAN**: Tencent ARC Lab
-- **Real-ESRGAN**: Xintao Wang et al.
-- **AdaFace**: Minchul Kim et al.
-- **FAISS**: Facebook AI Research
-- **FastAPI**: Sebastián Ramírez
 
 ---
 
-Built with ❤️ for seamless student identification • [Report Bug](https://github.com/yourusername/student-id-system/issues) • [Request Feature](https://github.com/yourusername/student-id-system/issues)
+## 🎯 Usage
+
+### 1. Register Students
+
+Place photos in this structure:
+```
+trainset/
+├── CSE/
+│   ├── CSE001/
+│   │   ├── photo1.jpg
+│   │   ├── photo2.jpg
+│   │   └── photo3.jpg
+│   └── CSE002/
+├── ECE/
+└── MECH/
+```
+
+Run registration:
+```bash
+python scripts/register_students.py
+```
+
+### 2. Identify Students
+
+- Upload photo through web interface
+- System detects face, assesses quality
+- Conditionally enhances if needed
+- Returns student details with confidence score
+
+### 3. View Analytics
+
+- Access Statistics module for insights
+- View identification logs
+- Monitor success rates and processing times
+
+---
+
+## 🔬 Technical Architecture
+
+### Pipeline Flow
+```
+Input Image
+    ↓
+[MTCNN Detection] → Face detected? → No → ❌ Failure
+    ↓ Yes
+[Quality Assessment] → Q = 0.3×sharpness + 0.2×brightness + ...
+    ↓
+Q < 0.7? → Yes → [GFPGAN + Real-ESRGAN Enhancement]
+    ↓ No
+[AdaFace Embedding] → 512-D vector
+    ↓
+[L2 Normalization]
+    ↓
+[FAISS Search] → Cosine similarity > 0.45?
+    ↓ Yes
+✅ Identified: Student Details + Confidence
+```
+
+### Quality Metrics
+- **Sharpness**: Laplacian variance (weight: 0.3)
+- **Brightness**: Mean pixel intensity (weight: 0.2)
+- **Contrast**: Std deviation (weight: 0.2)
+- **Face Size**: Area ratio (weight: 0.15)
+- **Confidence**: MTCNN score (weight: 0.15)
+
+### Models Used
+| Model | Purpose | Parameters | Input/Output |
+|-------|---------|------------|--------------|
+| MTCNN | Face Detection | 3 cascaded CNNs | Image → BBox + Landmarks |
+| Real-ESRGAN | Super-Resolution | 23 RRDB blocks | 112×112 → 224×224 |
+| GFPGAN | Face Restoration | U-Net + StyleGAN2 | Degraded → Clean |
+| AdaFace IR-101 | Embedding | 42M params | 112×112 → 512-D |
+| FAISS | Similarity Search | IndexFlatIP | 512-D → Top-K matches |
+
+---
+
+## 📊 Performance
+
+| Metric | Value |
+|--------|-------|
+| **Overall Accuracy** | 86.8% |
+| **High-Quality Images** | 93.2% |
+| **Low-Quality Images** | 58.5% → 78.2% (with enhancement) |
+| **Processing Time** | 2.4s avg (CPU) |
+| **FAISS Search** | 30ms (1,014 students) |
+| **Dataset Size** | 1,014 students, 12 departments |
+
+### Ablation Study
+| Configuration | Accuracy |
+|---------------|----------|
+| Always Enhance | 87.2% (2.7s avg) |
+| Never Enhance | 79.3% (0.9s avg) |
+| **Adaptive (Q<0.7)** | **86.8% (1.8s avg)** ✅ |
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables (`.env`)
+```env
+DATABASE_URL=sqlite:///./students.db
+SECRET_KEY=your-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+MODEL_PATH=./models
+PHOTOS_PATH=./photos
+TRAINSET_PATH=./trainset
+ALLOWED_ORIGINS=http://localhost:3000
+```
+
+### Frontend (`.env.local`)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+---
+
+## 🚢 Deployment
+
+See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for detailed instructions on:
+- Cloud deployment (Render, Railway, AWS)
+- Production configuration
+- Security best practices
+- Scaling strategies
+
+**Quick Deploy Options:**
+- [![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com)
+- [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app)
+
+---
+
+## 📚 Documentation
+
+- **[VIVA_PRESENTATION_NOTES.md](VIVA_PRESENTATION_NOTES.md)**: Complete technical walkthrough
+- **[PROJECT_DIARY_ENTRIES.md](PROJECT_DIARY_ENTRIES.md)**: Development log
+- **[IEEE_RESEARCH_PAPER.md](IEEE_RESEARCH_PAPER.md)**: Academic paper
+- **[PROJECT_PRESENTATION.md](PROJECT_PRESENTATION.md)**: Presentation slides
+
+---
+
+## 🛠️ Development
+
+### Run Tests
+```bash
+pytest tests/
+```
+
+### Code Quality
+```bash
+# Format
+black backend/ scripts/
+
+# Lint
+pylint backend/ scripts/
+```
+
+### API Documentation
+Access interactive API docs at: `http://localhost:8000/docs`
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+---
+
+## ⚠️ Known Limitations
+
+- **Extreme Degradation**: <30×30 pixel faces or JPEG quality <15 fail
+- **Occlusion**: >50% face coverage reduces accuracy significantly
+- **Pose Variation**: Extreme profiles (>45° rotation) struggle
+- **Demographic Bias**: Training data imbalances may affect fairness
+- **Spoofing**: No liveness detection (vulnerable to photo attacks)
+
+---
+
+## 🔮 Future Enhancements
+
+- [ ] Liveness detection (blink/movement analysis)
+- [ ] Multi-view fusion (frontal + profile)
+- [ ] Continual learning for appearance changes
+- [ ] GPU acceleration for real-time processing
+- [ ] Mobile app integration
+- [ ] Federated learning for privacy
+- [ ] 3D face recognition
+- [ ] Mask detection and handling
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
+
+**Model Licenses:**
+- AdaFace: MIT License
+- GFPGAN: Apache 2.0
+- Real-ESRGAN: BSD 3-Clause
+- MTCNN: MIT License
+
+---
+
+## 👥 Authors
+
+- **Dheeraj Reddy** - [GitHub](https://github.com/dheerajreddy71)
+
+---
+
+## 🙏 Acknowledgments
+
+- [AdaFace](https://github.com/mk-minchul/AdaFace) by Minchul Kim et al.
+- [GFPGAN](https://github.com/TencentARC/GFPGAN) by Tencent ARC Lab
+- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) by Xintao Wang et al.
+- [MTCNN](https://github.com/ipazc/mtcnn) by Iván de Paz Centeno
+- [FAISS](https://github.com/facebookresearch/faiss) by Facebook AI Research
+
+---
+
+## 📞 Support
+
+- 📧 Email: dheerajreddy71@example.com
+- 🐛 Issues: [GitHub Issues](https://github.com/dheerajreddy71/Student-identification-system/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/dheerajreddy71/Student-identification-system/discussions)
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for educational institutions</p>
+  <p>⭐ Star this repo if you find it helpful!</p>
+</div>

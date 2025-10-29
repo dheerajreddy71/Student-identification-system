@@ -65,10 +65,18 @@ class FaceDetector:
             Aligned face image or None
         """
         try:
+            # Minimum face size check - prevent tiny faces from producing garbage embeddings
+            MIN_FACE_DIM = 50  # pixels (minimum for reliable identification)
+            
             # For simplicity, just crop the face without complex alignment
             # This avoids keypoint parsing issues and is more robust
             box = face_info['box']
             x, y, width, height = box
+            
+            # Check raw face size before processing
+            if width < MIN_FACE_DIM or height < MIN_FACE_DIM:
+                print(f"⚠️  Face too small ({width}×{height} px) - minimum {MIN_FACE_DIM} px required")
+                return None
             
             h, w = image.shape[:2]
             
@@ -85,8 +93,17 @@ class FaceDetector:
             if face_crop.size == 0:
                 return None
             
-            # Resize to output size
-            aligned_face = cv2.resize(face_crop, output_size, interpolation=cv2.INTER_AREA)
+            # Choose interpolation based on whether we're upscaling or downscaling
+            # INTER_CUBIC: better for upscaling small faces (preserves details)
+            # INTER_AREA: better for downscaling large faces (reduces aliasing)
+            src_h, src_w = face_crop.shape[:2]
+            dst_w, dst_h = output_size
+            if dst_w > src_w or dst_h > src_h:
+                interp = cv2.INTER_CUBIC  # upscaling - preserve facial details
+            else:
+                interp = cv2.INTER_AREA   # downscaling - reduce artifacts
+            
+            aligned_face = cv2.resize(face_crop, output_size, interpolation=interp)
             
             return aligned_face
             

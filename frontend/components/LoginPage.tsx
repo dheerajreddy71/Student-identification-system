@@ -53,33 +53,41 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-10 left-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
+      <div className="max-w-md w-full relative z-10">
         {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-white rounded-full shadow-lg mb-4">
-            <svg className="w-16 h-16 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center mb-8 float-animation">
+          <div className="inline-block glass-card-strong p-6 rounded-full shadow-2xl mb-6 border border-white/20">
+            <svg className="w-16 h-16 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-gradient mb-3">
             Student Identification System
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-300 text-lg">
             AI-Powered Face Recognition
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white shadow-xl rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <div className="glass-card-strong rounded-2xl p-8 shadow-2xl border border-white/20">
+          <h2 className="text-3xl font-bold text-white mb-8 text-center flex items-center justify-center gap-3">
+            <span className="text-3xl">🔐</span>
             Sign In
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
                 Username
               </label>
               <input
@@ -87,7 +95,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                          text-white placeholder-gray-400 focus:outline-none 
+                          focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                          transition-all duration-300"
                 placeholder="Enter username"
                 required
               />
@@ -95,7 +106,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -103,7 +114,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-4 py-3 glass-card rounded-xl border border-white/10 
+                          text-white placeholder-gray-400 focus:outline-none 
+                          focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 
+                          transition-all duration-300"
                 placeholder="Enter password"
                 required
               />
@@ -111,8 +125,11 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {typeof error === 'string' ? error : 'Login failed. Please check your credentials.'}
+              <div className="glass-card border border-red-400/30 bg-red-500/10 rounded-xl p-4">
+                <p className="text-red-300 flex items-center gap-2">
+                  <span className="text-xl">⚠️</span>
+                  {typeof error === 'string' ? error : 'Login failed. Please check your credentials.'}
+                </p>
               </div>
             )}
 
@@ -120,30 +137,48 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+              className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300
+                ${loading
+                  ? 'glass-card text-gray-500 cursor-not-allowed'
+                  : 'glow-button bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg hover:shadow-blue-500/50 hover:scale-105'
+                }`}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  Signing in...
+                </span>
+              ) : (
+                '🔓 Sign In'
+              )}
             </button>
           </form>
 
           {/* Default Credentials Info */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800 font-medium mb-1">
+          <div className="mt-6 glass-card border border-blue-400/30 bg-blue-500/10 rounded-xl p-5">
+            <p className="text-sm text-blue-300 font-bold mb-2 flex items-center gap-2">
+              <span className="text-lg">ℹ️</span>
               Default Credentials:
             </p>
-            <p className="text-sm text-blue-700">
-              Username: <code className="font-mono bg-blue-100 px-2 py-1 rounded">admin</code><br />
-              Password: <code className="font-mono bg-blue-100 px-2 py-1 rounded">admin123</code>
+            <p className="text-sm text-blue-200">
+              Username: <code className="font-mono glass-card px-3 py-1 rounded-lg border border-blue-400/20 text-blue-300">admin</code><br />
+              Password: <code className="font-mono glass-card px-3 py-1 rounded-lg border border-blue-400/20 text-blue-300 mt-1 inline-block">admin123</code>
             </p>
-            <p className="text-xs text-blue-600 mt-2">
-              ⚠️ Please change the password after first login
+            <p className="text-xs text-blue-300 mt-3 flex items-center gap-2">
+              <span>⚠️</span>
+              Please change the password after first login
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-6 text-sm text-gray-600">
-          Powered by GFPGAN v1.4, AdaFace, and FAISS
+        <div className="text-center mt-8 text-sm text-gray-400">
+          <p className="glass-card inline-block px-6 py-3 rounded-full border border-white/10">
+            Powered by{' '}
+            <span className="text-blue-400 font-semibold">GFPGAN v1.4</span>,{' '}
+            <span className="text-purple-400 font-semibold">AdaFace</span>, and{' '}
+            <span className="text-pink-400 font-semibold">FAISS</span>
+          </p>
         </div>
       </div>
     </div>
