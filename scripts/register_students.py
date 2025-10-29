@@ -1,13 +1,16 @@
 ﻿#!/usr/bin/env python3
 """
-Rebuild FAISS index with department structure
+Register students from trainset folder structure
 trainset/DEPT/STUDENT_ID/photos.jpg
-Structure: AGRI/ag1/ag1_1.jpg, CSE/cse1/cse1_1.jpg, etc.
+Structure: CSE/CSE001/photo1.jpg, ECE/ECE001/photo1.jpg, etc.
+
+Note: Student details should be provided in a CSV file or manually entered.
+This script only processes the facial embeddings from photos.
 """
 import os
 import cv2
 import numpy as np
-import random
+import json
 from pathlib import Path
 from backend.models.adaface_model import AdaFaceModel
 from backend.models.face_detection import FaceDetector
@@ -16,41 +19,43 @@ from backend.config import settings, get_db
 from backend.database.operations import StudentDB
 from backend.database.models import Student
 
-# Random name generator
-FIRST_NAMES = [
-    "Aarav", "Vivaan", "Aditya", "Arjun", "Sai", "Vihaan", "Krishna", "Ayaan",
-    "Ananya", "Diya", "Aadhya", "Avni", "Sara", "Pari", "Isha", "Mira",
-    "Rohan", "Karan", "Rudra", "Reyansh", "Aarush", "Dhruv", "Pranav", "Dev",
-    "Priya", "Riya", "Pooja", "Sneha", "Kavya", "Nisha", "Simran", "Tanvi",
-    "Rahul", "Amit", "Raj", "Vikram", "Nikhil", "Sanjay", "Suresh", "Anil",
-    "Divya", "Meera", "Lakshmi", "Radha", "Sita", "Gita", "Kamala", "Uma"
-]
+def load_student_info():
+    """
+    Load student information from students_info.json
+    Format: {
+        "CSE001": {
+            "name": "John Doe",
+            "email": "john@university.edu",
+            "phone": "+91-9876543210",
+            "year": 2,
+            "address": "Hostel A, Room 101"
+        }
+    }
+    """
+    info_file = Path("./trainset/students_info.json")
+    if info_file.exists():
+        with open(info_file, 'r') as f:
+            return json.load(f)
+    return {}
 
-LAST_NAMES = [
-    "Sharma", "Verma", "Gupta", "Kumar", "Singh", "Patel", "Reddy", "Nair",
-    "Iyer", "Menon", "Pillai", "Rao", "Joshi", "Desai", "Mehta", "Shah",
-    "Agarwal", "Bansal", "Chopra", "Kapoor", "Malhotra", "Khanna", "Bhatia",
-    "Sethi", "Arora", "Jindal", "Goel", "Mittal", "Singhal", "Garg"
-]
-
-def generate_student_name():
-    """Generate random Indian student name"""
-    return f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}"
-
-def generate_email(student_id, dept):
-    """Generate email from student ID"""
-    return f"{student_id}@{dept.lower()}.university.edu"
-
-def generate_phone():
-    """Generate random Indian phone number"""
-    return f"+91-{random.randint(70000,99999)}{random.randint(10000,99999)}"
+def extract_student_name_from_id(student_id):
+    """Extract name from student ID folder or use ID as placeholder"""
+    return student_id.replace('_', ' ').title()
 
 print("="*70)
-print("Rebuilding with Department Structure")
+print("Student Registration System")
 print("="*70)
+
+# Load student information
+print("\n1. Loading student information...")
+student_info = load_student_info()
+if student_info:
+    print(f"Loaded info for {len(student_info)} students from students_info.json")
+else:
+    print("No students_info.json found. Using default values from folder structure.")
 
 # Clear database
-print("\n1. Clearing database...")
+print("\n2. Clearing existing student records...")
 db = next(get_db())
 try:
     deleted = db.query(Student).delete()
@@ -61,20 +66,20 @@ except Exception as e:
     db.rollback()
 
 # Load models
-print("\n2. Loading AdaFace...")
+print("\n3. Loading AdaFace model...")
 adaface = AdaFaceModel(model_path=settings.adaface_model_path, device='cpu')
-print("OK")
+print("✓ AdaFace model loaded")
 
-print("\n3. Loading Face Detector...")
+print("\n4. Loading Face Detector...")
 detector = FaceDetector(device='cpu')
-print("OK")
+print("✓ Face detector loaded")
 
-print("\n4. Creating FAISS index...")
+print("\n5. Creating FAISS vector database...")
 vector_db = FAISSVectorDB(embedding_dim=512, metric='cosine')
-print("OK")
+print("✓ FAISS database ready")
 
 # Process trainset
-print("\n5. Processing trainset...")
+print("\n6. Processing student photos from trainset/...")
 trainset = Path("./trainset")
 
 processed = 0
@@ -151,9 +156,20 @@ for dept_folder in sorted(trainset.iterdir()):
         # Normalize embedding (important for cosine similarity)
         final_emb = final_emb / np.linalg.norm(final_emb)
         
-        # Generate student details
-        student_name = generate_student_name()
-        year = random.randint(1, 4)  # Random year between 1-4
+        # Get student details from info file or use defaults
+        if student_id in student_info:
+            info = student_info[student_id]
+            student_name = info.get('name', extract_student_name_from_id(student_id))
+            year = info.get('year', 1)
+            email = info.get('email', f"{student_id.lower()}@{dept.lower()}.university.edu")
+            phone = info.get('phone', '')
+            address = info.get('address', '')
+        else:
+            student_name = extract_student_name_from_id(student_id)
+            year = 1
+            email = f"{student_id.lower()}@{dept.lower()}.university.edu"
+            phone = ''
+            address = ''
         
         idx = vector_db.add_embedding(
             final_emb,
@@ -174,25 +190,25 @@ for dept_folder in sorted(trainset.iterdir()):
             "roll_number": student_id,
             "faiss_index": idx,
             "photo_path": str(student_folder.relative_to(Path("."))),
-            "email": generate_email(student_id, dept),
-            "phone": generate_phone(),
-            "address": f"Hostel Block-{random.choice(['A','B','C','D'])}, Room {random.randint(101,599)}"
+            "email": email,
+            "phone": phone,
+            "address": address
         })
         
         print(f"  {student_id} ({student_name}) ... SUCCESS ({len(embeddings)}/{len(images)} images, FAISS idx: {idx})")
         processed += 1
 
 print(f"\n{'='*70}")
-print(f"Processed: {processed} | Failed: {failed}")
+print(f"Processing Complete: {processed} successful | {failed} failed")
 print(f"{'='*70}")
 
 # Save FAISS
-print("\n6. Saving FAISS...")
+print("\n7. Saving FAISS vector database...")
 vector_db.save("./data/faiss_index.bin", "./data/faiss_metadata.json")
-print("OK")
+print("✓ FAISS database saved")
 
 # Insert into DB
-print("\n7. Inserting into database...")
+print("\n8. Inserting students into database...")
 inserted = 0
 for data in students_data:
     try:
@@ -202,10 +218,17 @@ for data in students_data:
         print(f"Error: {data['student_id']} - {e}")
 
 db.commit()
-print(f"Inserted {inserted} students")
+print(f"✓ Successfully registered {inserted} students")
 
 print(f"\n{'='*70}")
-print("COMPLETE!")
-print(f"FAISS: {vector_db.index.ntotal} vectors")
-print(f"Database: {inserted} students")
+print("REGISTRATION COMPLETE!")
+print(f"{'='*70}")
+print(f"Total Embeddings in FAISS: {vector_db.index.ntotal}")
+print(f"Students in Database: {inserted}")
+print(f"Success Rate: {processed}/{processed+failed} ({100*processed/(processed+failed):.1f}%)")
+print(f"{'='*70}")
+print("\nNext steps:")
+print("1. Start the backend server")
+print("2. Use the web interface to identify students")
+print("3. Update student details as needed")
 print(f"{'='*70}")
