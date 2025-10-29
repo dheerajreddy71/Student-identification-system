@@ -1,0 +1,30 @@
+services:
+  # Backend API Service
+  - type: web
+    name: student-identification-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: DATABASE_URL
+        value: sqlite:///./student_identification.db
+      - key: FAISS_INDEX_PATH
+        value: ./data/faiss_index.bin
+      - key: FAISS_METADATA_PATH
+        value: ./data/faiss_metadata.json
+      - key: GFPGAN_MODEL_PATH
+        value: ./models/GFPGANv1.4.pth
+      - key: REALESRGAN_MODEL_PATH
+        value: ./models/RealESRGAN_x4plus.pth
+      - key: ADAFACE_MODEL_PATH
+        value: ./models/adaface_ir101_webface12m.ckpt
+      - key: PYTHON_VERSION
+        value: 3.9.18
