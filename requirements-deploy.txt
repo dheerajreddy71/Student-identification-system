@@ -1,0 +1,41 @@
+# Deployment-optimized requirements (lighter than full requirements.txt)
+# Use this for cloud deployment to reduce memory usage
+
+# Core Dependencies (Required)
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+opencv-python-headless>=4.8.0  # Headless version - smaller
+Pillow>=10.0.0
+
+# Face Recognition - AdaFace
+timm>=0.9.0
+scipy>=1.11.0
+
+# Vector Database
+faiss-cpu>=1.7.4
+
+# Backend
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-dotenv>=1.0.0
+pydantic>=2.4.0
+pydantic-settings>=2.0.0
+email-validator>=2.0.0
+
+# Database
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+
+# Utilities
+tqdm>=4.66.0
+scikit-learn>=1.3.0
+
+# Logging
+loguru>=0.7.2
+
+# Security
+cryptography>=41.0.0

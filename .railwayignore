@@ -1,0 +1,58 @@
+# Ignore large model files (will be downloaded post-deployment)
+models/*.ckpt
+models/*.pth
+gfpgan/weights/*.pth
+
+# Ignore data folders
+trainset/
+trainset_backup/
+test_dataset/
+test_results/
+photos/
+data/
+
+# Ignore backup and temporary files
+backup/
+temp/
+logs/
+*.log
+
+# Ignore test files
+*.test.py
+test_*.py
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (can re-add if needed)
+*.md
+!README.md

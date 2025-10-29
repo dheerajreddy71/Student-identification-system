@@ -46,17 +46,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize pipelines (lazy loading)
+# Initialize pipelines (lazy loading for memory efficiency)
 preprocessing_pipeline = None
 recognition_pipeline = None
 security = HTTPBearer()
 
 
 def get_pipelines():
-    """Get or initialize pipelines"""
+    """Get or initialize pipelines (lazy loaded to reduce startup memory)"""
     global preprocessing_pipeline, recognition_pipeline
     
     if preprocessing_pipeline is None or recognition_pipeline is None:
+        import gc
+        gc.collect()  # Clear memory before loading heavy models
+        
         preprocessing_pipeline, recognition_pipeline = create_pipeline(
             device=settings.device
         )
@@ -103,6 +106,20 @@ def load_image_from_upload(upload_file: UploadFile) -> np.ndarray:
         raise HTTPException(status_code=400, detail="Invalid image file")
     
     return image
+
+
+# ============= Health Check =============
+
+@app.get("/")
+@app.get("/health")
+def health_check():
+    """Health check endpoint for deployment monitoring"""
+    return {
+        "status": "healthy",
+        "service": "Student Identification System",
+        "version": "1.0.0",
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 
 # ============= Authentication Endpoints =============
